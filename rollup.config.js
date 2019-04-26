@@ -1,7 +1,7 @@
 import path from 'path';
 import commonjs from 'rollup-plugin-commonjs';
 import replace from 'rollup-plugin-replace';
-import resolve from 'rollup-plugin-node-resolve';
+import resolve from 'rollup-plugin-pnp-resolve';
 import sourceMaps from 'rollup-plugin-sourcemaps';
 import babel from 'rollup-plugin-babel';
 import { terser } from 'rollup-plugin-terser';
@@ -36,7 +36,6 @@ const buildUmd = ({ env }) => ({
   },
 
   plugins: [
-    resolve(),
     babel(babelOptions),
     replace({
       'process.env.NODE_ENV': JSON.stringify(env),
@@ -55,6 +54,7 @@ const buildUmd = ({ env }) => ({
         ],
       },
     }),
+    resolve(),
     sourceMaps(),
     sizeSnapshot(),
     env === 'production' &&
