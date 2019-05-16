@@ -24,6 +24,10 @@ import {
 } from './utils';
 import { FormikProvider } from './FormikContext';
 import invariant from 'tiny-warning';
+import {
+  useReducerWithEmitEffect,
+  emitEffect,
+} from './useReducerWithEmitEffect';
 
 // We already used FormikActions. So we'll go all Elm-y, and use Message.
 type FormikMessage<Values> =
@@ -61,10 +65,12 @@ function formikReducer<Values>(
     case 'SET_ISVALIDATING':
       return { ...state, isValidating: msg.payload };
     case 'SET_FIELD_VALUE':
-      return {
+      const nextState = {
         ...state,
         values: setIn(state.values, msg.payload.field, msg.payload.value),
       };
+      emitEffect(() => console.log(nextState));
+      return nextState;
     case 'SET_FIELD_TOUCHED':
       return {
         ...state,
@@ -149,7 +155,7 @@ export function useFormik<Values = object>({
     };
   }, []);
 
-  const [state, dispatch] = React.useReducer<
+  const [state, dispatch] = useReducerWithEmitEffect<
     React.Reducer<FormikState<Values>, FormikMessage<Values>>
   >(formikReducer, {
     values: props.initialValues,
@@ -293,14 +299,14 @@ export function useFormik<Values = object>({
       }
     },
     [
-      props.validate,
-      props.validationSchema,
-      runFieldLevelValidations,
-      runValidateHandler,
-      runValidationSchema,
-      state.errors,
       state.values,
-      fields,
+      state.errors,
+      props.validationSchema,
+      props.validate,
+      dispatch,
+      runFieldLevelValidations,
+      runValidationSchema,
+      runValidateHandler,
     ]
   );
 
@@ -396,6 +402,7 @@ export function useFormik<Values = object>({
       });
     },
     [
+      dispatch,
       props.initialErrors,
       props.initialStatus,
       props.initialTouched,
@@ -453,7 +460,7 @@ export function useFormik<Values = object>({
         return Promise.resolve();
       }
     },
-    [state.values, fields]
+    [state.values, dispatch]
   );
 
   const registerField = React.useCallback(
@@ -476,36 +483,37 @@ export function useFormik<Values = object>({
     [fields]
   );
 
-  const handleBlur = React.useCallback((eventOrString: any):
-    | void
-    | ((e: any) => void) => {
-    if (isString(eventOrString)) {
-      return event => executeBlur(event, eventOrString);
-    } else {
-      executeBlur(eventOrString);
-    }
-
-    function executeBlur(e: any, path?: string) {
-      if (e.persist) {
-        e.persist();
+  const handleBlur = React.useCallback(
+    (eventOrString: any): void | ((e: any) => void) => {
+      if (isString(eventOrString)) {
+        return event => executeBlur(event, eventOrString);
+      } else {
+        executeBlur(eventOrString);
       }
-      const { name, id, outerHTML } = e.target;
-      const field = path ? path : name ? name : id;
 
-      if (!field && process.env.NODE_ENV !== 'production') {
-        warnAboutMissingIdentifier({
-          htmlContent: outerHTML,
-          documentationAnchorLink: 'handleblur-e-any--void',
-          handlerName: 'handleBlur',
+      function executeBlur(e: any, path?: string) {
+        if (e.persist) {
+          e.persist();
+        }
+        const { name, id, outerHTML } = e.target;
+        const field = path ? path : name ? name : id;
+
+        if (!field && process.env.NODE_ENV !== 'production') {
+          warnAboutMissingIdentifier({
+            htmlContent: outerHTML,
+            documentationAnchorLink: 'handleblur-e-any--void',
+            handlerName: 'handleBlur',
+          });
+        }
+
+        dispatch({
+          type: 'SET_FIELD_TOUCHED',
+          payload: { field, value: true },
         });
       }
-
-      dispatch({
-        type: 'SET_FIELD_TOUCHED',
-        payload: { field, value: true },
-      });
-    }
-  }, []);
+    },
+    [dispatch]
+  );
 
   const handleChange = React.useCallback(
     (
@@ -565,7 +573,7 @@ export function useFormik<Values = object>({
         }
       }
     },
-    []
+    [dispatch]
   );
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement> | undefined) {
@@ -598,17 +606,26 @@ export function useFormik<Values = object>({
     submitForm();
   }
 
-  const setTouched = React.useCallback((touched: FormikTouched<Values>) => {
-    dispatch({ type: 'SET_TOUCHED', payload: touched });
-  }, []);
+  const setTouched = React.useCallback(
+    (touched: FormikTouched<Values>) => {
+      dispatch({ type: 'SET_TOUCHED', payload: touched });
+    },
+    [dispatch]
+  );
 
-  const setErrors = React.useCallback((errors: FormikErrors<Values>) => {
-    dispatch({ type: 'SET_ERRORS', payload: errors });
-  }, []);
+  const setErrors = React.useCallback(
+    (errors: FormikErrors<Values>) => {
+      dispatch({ type: 'SET_ERRORS', payload: errors });
+    },
+    [dispatch]
+  );
 
-  const setValues = React.useCallback((values: Values) => {
-    dispatch({ type: 'SET_VALUES', payload: values });
-  }, []);
+  const setValues = React.useCallback(
+    (values: Values) => {
+      dispatch({ type: 'SET_VALUES', payload: values });
+    },
+    [dispatch]
+  );
 
   const setFieldError = React.useCallback(
     (field: string, value: string | undefined) => {
@@ -617,36 +634,42 @@ export function useFormik<Values = object>({
         payload: { field, value },
       });
     },
-    []
+    [dispatch]
   );
 
-  const setFieldValue = React.useCallback((
-    field: string,
-    value: any
-    // shouldValidate: boolean = true
-  ) => {
-    dispatch({
-      type: 'SET_FIELD_VALUE',
-      payload: {
-        field,
-        value,
-      },
-    });
-  }, []);
+  const setFieldValue = React.useCallback(
+    (
+      field: string,
+      value: any
+      // shouldValidate: boolean = true
+    ) => {
+      dispatch({
+        type: 'SET_FIELD_VALUE',
+        payload: {
+          field,
+          value,
+        },
+      });
+    },
+    [dispatch]
+  );
 
-  const setFieldTouched = React.useCallback((
-    field: string,
-    touched: boolean = true
-    // shouldValidate: boolean = true
-  ) => {
-    dispatch({
-      type: 'SET_FIELD_TOUCHED',
-      payload: {
-        field,
-        value: touched,
-      },
-    });
-  }, []);
+  const setFieldTouched = React.useCallback(
+    (
+      field: string,
+      touched: boolean = true
+      // shouldValidate: boolean = true
+    ) => {
+      dispatch({
+        type: 'SET_FIELD_TOUCHED',
+        payload: {
+          field,
+          value: touched,
+        },
+      });
+    },
+    [dispatch]
+  );
 
   function setFormikState(
     stateOrCb:
@@ -660,13 +683,19 @@ export function useFormik<Values = object>({
     }
   }
 
-  const setStatus = React.useCallback((status: any) => {
-    dispatch({ type: 'SET_STATUS', payload: status });
-  }, []);
+  const setStatus = React.useCallback(
+    (status: any) => {
+      dispatch({ type: 'SET_STATUS', payload: status });
+    },
+    [dispatch]
+  );
 
-  const setSubmitting = React.useCallback((isSubmitting: boolean) => {
-    dispatch({ type: 'SET_ISSUBMITTING', payload: isSubmitting });
-  }, []);
+  const setSubmitting = React.useCallback(
+    (isSubmitting: boolean) => {
+      dispatch({ type: 'SET_ISSUBMITTING', payload: isSubmitting });
+    },
+    [dispatch]
+  );
 
   const imperativeMethods = {
     resetForm,
@@ -709,7 +738,7 @@ export function useFormik<Values = object>({
         dispatch({ type: 'SUBMIT_FAILURE' });
       }
     });
-  }, [executeSubmit, validateForm]);
+  }, [dispatch, executeSubmit, validateForm]);
 
   const handleReset = React.useCallback(() => {
     if (props.onReset) {
