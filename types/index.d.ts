@@ -34,3 +34,8 @@ declare module 'deepmerge' {
     function all<T>(objects: Array<Partial<T>>, options?: Options): T;
   }
 }
+
+declare module 'create-react-context' {
+  import * as React from 'react';
+  export default React.createContext;
+}
