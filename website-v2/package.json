@@ -1,0 +1,27 @@
+{
+  "name": "website-v-2",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "docusaurus": "docusaurus",
+    "start": "docusaurus start",
+    "build": "docusaurus build",
+    "swizzle": "docusaurus swizzle",
+    "deploy": "docusaurus deploy",
+    "postinstall": "patch-package"
+  },
+  "dependencies": {
+    "@docusaurus/core": "^2.0.0-alpha.18",
+    "@docusaurus/preset-classic": "^2.0.0-alpha.18",
+    "@mdx-js/tag": "^0.20.3",
+    "classnames": "^2.2.6",
+    "formik": "^2.0.1-rc.4",
+    "react": "^16.8.4",
+    "react-dom": "^16.8.4",
+    "react-feather": "^1.1.6",
+    "react-live": "^2.1.2"
+  },
+  "devDependencies": {
+    "patch-package": "^6.1.2"
+  }
+}

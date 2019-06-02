@@ -1,0 +1,40 @@
+diff --git a/node_modules/@docusaurus/mdx-loader/src/index.js b/node_modules/@docusaurus/mdx-loader/src/index.js
+index 663b765..36fc597 100755
+--- a/node_modules/@docusaurus/mdx-loader/src/index.js
++++ b/node_modules/@docusaurus/mdx-loader/src/index.js
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  */
+ 
+-const {getOptions} = require('loader-utils');
++const { getOptions } = require('loader-utils');
+ const mdx = require('@mdx-js/mdx');
+ const rehypePrism = require('@mapbox/rehype-prism');
+ const emoji = require('remark-emoji');
+@@ -16,7 +16,7 @@ const linkHeadings = require('./linkHeadings');
+ const rightToc = require('./rightToc');
+ 
+ const DEFAULT_OPTIONS = {
+-  rehypePlugins: [[rehypePrism, {ignoreMissing: true}], linkHeadings],
++  rehypePlugins: [linkHeadings],
+   remarkPlugins: [emoji, slug, rightToc],
+   prismTheme: 'prism-themes/themes/prism-atom-dark.css',
+ };
+@@ -24,7 +24,7 @@ const DEFAULT_OPTIONS = {
+ module.exports = async function(fileString) {
+   const callback = this.async();
+ 
+-  const {data, content} = matter(fileString);
++  const { data, content } = matter(fileString);
+   const options = Object.assign(DEFAULT_OPTIONS, getOptions(this), {
+     filepath: this.resourcePath,
+   });
+@@ -45,7 +45,7 @@ module.exports = async function(fileString) {
+   const code = `
+   import React from 'react';
+   import { mdx } from '@mdx-js/react';
+-  ${importStr}
++
+   export const frontMatter = ${stringifyObject(data)};
+   ${result}
+   `;
