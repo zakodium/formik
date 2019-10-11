@@ -155,7 +155,7 @@ const users = [
   },
   {
     caption: 'Gusto',
-    image: '/formik/img/logos/gusto.png',
+    image: '/formik/img/logos/gusto.svg',
     infoLink: 'https://gusto.com',
   },
   {
@@ -172,6 +172,11 @@ const users = [
     caption: 'gitconnected',
     image: '/formik/img/logos/gitconnected-logo.png',
     infoLink: 'https://gitconnected.com',
+  },
+  {
+    caption: 'zauberware',
+    image: '/formik/img/logos/zauberware-logo.svg',
+    infoLink: 'https://www.zauberware.com',
   },
 ];
 
